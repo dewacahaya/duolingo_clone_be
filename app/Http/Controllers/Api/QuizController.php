@@ -23,6 +23,7 @@ class QuizController extends Controller
     public function start($unit_id, Request $request)
     {
         $user = $request->user();
+        $maxQuestions = 10;
 
         if ($user->hearts <= 0) {
             return response()->json(['message' => 'Nyawa habis! Tunggu regenerasi.'], 403);
@@ -33,18 +34,22 @@ class QuizController extends Controller
                 $q->where('user_id', $user->id)->where('is_mastered', false);
             })
             ->inRandomOrder()
-            ->limit(5)
+            ->limit($maxQuestions)
             ->get();
 
-        $needed = 10 - $remedialQuestions->count();
+        $slotsLeft = $maxQuestions - $remedialQuestions->count();
 
-        $newQuestions = Question::where('unit_id', $unit_id)
-            ->whereNotIn('id', $remedialQuestions->pluck('id'))
-            ->inRandomOrder()
-            ->limit($needed)
-            ->get();
+        $finalQuestions = $remedialQuestions;
 
-        $finalQuestions = $remedialQuestions->merge($newQuestions);
+        if ($slotsLeft > 0) {
+            $newQuestions = Question::where('unit_id', $unit_id)
+                ->whereNotIn('id', $remedialQuestions->pluck('id'))
+                ->inRandomOrder()
+                ->limit($slotsLeft)
+                ->get();
+
+            $finalQuestions = $finalQuestions->merge($newQuestions);
+        }
 
         if ($finalQuestions->isEmpty()) {
             return response()->json(['message' => 'Soal belum tersedia untuk unit ini.'], 404);
@@ -53,6 +58,7 @@ class QuizController extends Controller
         return response()->json([
             'unit_id' => $unit_id,
             'is_remedial_mode' => $remedialQuestions->count() > 0,
+            'remedial_count' => $remedialQuestions->count(),
             'questions' => $finalQuestions
         ]);
     }
