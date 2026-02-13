@@ -7,31 +7,41 @@ use App\Models\Character;
 use App\Models\UserCharacterProgress;
 use App\Services\GeminiService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class WritingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $chars = Character::all();
+        try {
+            $chars = Character::all();
 
         $grouped = [
             'hiragana' => $chars->where('type', 'hiragana')->values(),
             'katakana' => $chars->where('type', 'katakana')->values(),
         ];
 
-        $user = auth()->user();
+        $user = $request->user();
         if ($user) {
             $progress = UserCharacterProgress::where('user_id', $user->id)->get()->keyBy('character_id');
 
             foreach ($grouped as $type => $characters) {
-                foreach ($characters as $char) {
+                $grouped[$type] = $characters->map(function ($char) use ($progress) {
                     $p = $progress->get($char->id);
                     $char->mastery_level = $p ? $p->mastery_level : 0;
-                }
+                    return $char;
+                });
             }
         }
 
         return response()->json(['data' => $grouped]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Terjadi kesalahan di server.',
+                'error' => $e->getMessage(),
+                'line' => $e->getLine()
+            ], 500);
+        }
     }
 
     public function show($id)

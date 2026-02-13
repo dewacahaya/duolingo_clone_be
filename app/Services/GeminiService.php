@@ -98,16 +98,15 @@ class GeminiService
      */
     public function generateLessonGuide(string $chapterName)
     {
-        $prompt = "Kamu adalah guru bahasa Jepang profesional setingkat Native Level. Buatlah 5 unit materi pelajaran singkat untuk chapter berikut.
+        $prompt = "Kamu adalah guru bahasa Jepang profesional setingkat Native Level. Buatlah sebuah unit materi pelajaran singkat untuk chapter berikut.
         Chapter topik: '$chapterName'.
 
-    ATURAN PENTING:
-    1. Gunakan BAHASA INDONESIA untuk penjelasan materi unit. Gunakan bahasa Indonesia yang ringan dan menarik namun tetap jelas.
-    2. Gunakan huruf latin untuk penjelasan dan bila perlu gunakan Hiragana/Katakana/Kanji (N5) dasar sesuai konteks penjelasan materi.
-    3. Langsung berikan isi materi tanpa basa-basi pembuka.
-    4. Gunakan contoh kalimat atau frasa penting dalam materi unit.
-    5. Berikan penjelasan yang sesuai konteks chapter namun jangan terlalu panjang (maks: 300 kata).
-    6. Output wajib markdown (Heading, Bold, List, Table)";
+    ATURAN MUTLAK:
+    1. Jangan membuat sub-judul seperti 'Unit 1', 'Unit 2', dll. Fokus HANYA pada topik yang diberikan.
+    2. Format output WAJIB Markdown (Gunakan Heading tingkat 2 '##' untuk judul utama, Bold, List, Table).
+    3. Langsung berikan isi materi, tanpa kata pengantar apapun seperti 'Berikut adalah materinya', dll.
+    4. Berikan tabel hiragana/katakana/kanji yang relevan, cara baca, dan 3 contoh kosakata.
+    5. Singkat, padat, jelas (Maksimal 250 kata).";
 
         return $this->askGemini($prompt, false);
     }

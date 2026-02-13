@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Character;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class CharacterSeeder extends Seeder
 {
@@ -13,6 +14,11 @@ class CharacterSeeder extends Seeder
      */
     public function run(): void
     {
+
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        Character::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         $hiragana = [
             ['char' => 'あ', 'romaji' => 'a'],
             ['char' => 'い', 'romaji' => 'i'],
@@ -132,7 +138,7 @@ class CharacterSeeder extends Seeder
             Character::create([
                 'char' => $k['char'],
                 'romaji' => $k['romaji'],
-                'type' => 'hiragana'
+                'type' => 'katakana'
             ]);
         }
     }
