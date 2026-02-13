@@ -17,11 +17,28 @@ class GeminiService
         $this->model = config('services.gemini.model');
     }
 
-    private function cleanAndDecodeJSON(string $rawText)
+    private function cleanAndDecodeJson(string $rawText)
     {
-        $cleanText = str_replace(['```json', '```', 'json'], '', $rawText);
-        $cleanText = trim($cleanText);
+        $startPos = strpos($rawText, '{');
+        $endPos = strrpos($rawText, '}');
 
+        if ($startPos === false || $endPos === false) {
+            $startPos = strpos($rawText, '[');
+            $endPos = strrpos($rawText, ']');
+        }
+
+        if ($startPos !== false && $endPos !== false) {
+            $cleanText = substr($rawText, $startPos, $endPos - $startPos + 1);
+            $cleanText = preg_replace('/[\x00-\x1F\x7F]/u', '', $cleanText);
+
+            $data = json_decode($cleanText, true);
+
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return $data;
+            }
+        }
+
+        $cleanText = str_replace(['```json', '```', 'json'], '', $rawText);
         $data = json_decode($cleanText, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
@@ -41,7 +58,7 @@ class GeminiService
 
         $finalPrompt = $prompt;
         if ($isJsonMode) {
-            $finalPrompt .= "\n\nIMPORTANT: Return ONLY raw JSON. No Markdown block. No ```json wrapper.";
+            $finalPrompt .= "\n\nCRITICAL INSTRUCTION: Output MUST be valid JSON only. Do not include 'Here is the JSON' or markdown formatting. Start with { and end with }.";
         }
 
         try {
@@ -51,6 +68,15 @@ class GeminiService
                     ['parts' => [['text' => $finalPrompt]]]
                 ],
             ]);
+
+            if ($response->failed()) {
+                echo "\n\n🔥 API ERROR DARI GOOGLE:\n";
+                echo "------------------------------------------------\n";
+                echo "Status Code: " . $response->status() . "\n";
+                echo "Response Body: " . $response->body() . "\n";
+                echo "------------------------------------------------\n";
+                die(); // Matikan program biar kita bisa baca errornya
+            }
 
             if ($response->successful()) {
                 $text = $response->json('candidates.0.content.parts.0.text');
@@ -62,7 +88,7 @@ class GeminiService
             return null;
 
         } catch (\Exception $e) {
-            Log::error('Gemini Exception: ' . $e->getMessage());
+            echo "\n\n SYSTEM ERROR:\n" . $e->getMessage() . "\n";
             return null;
         }
     }

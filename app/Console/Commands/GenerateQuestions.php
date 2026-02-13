@@ -14,7 +14,7 @@ class GenerateQuestions extends Command
      *
      * @var string
      */
-    protected $signature = 'app:generate-questions {unit_id?}';
+    protected $signature = 'app:generate-content {unit_id?}';
 
     /**
      * The console command description.
@@ -87,8 +87,8 @@ class GenerateQuestions extends Command
                 $this->warn("   ⏩ Soal sudah cukup. Skip.");
             }
 
-            $this->info("   ⏳ Cooldown 7 detik...");
-            sleep(7);
+            $this->info("   ⏳ Cooldown 30 detik...");
+            sleep(30);
         }
 
         $this->info("\n🎉 Selesai! Semua konten siap digunakan.");
