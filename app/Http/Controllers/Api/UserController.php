@@ -46,14 +46,18 @@ class UserController extends Controller
     /**
      * Update Profile
      */
-    public function update(Request $request): JsonResponse
+    public function update(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'string|max:50',
-            'avatar_url' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
+        $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'avatar' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048', // Max 2MB
         ]);
 
-        $user = $this->userService->updateProfile($request->user(), $validated);
+        $user = $this->userService->updateProfile(
+            $request->user(),
+            $request->only('name'),
+            $request->file('avatar')
+        );
 
         return response()->json([
             'message' => 'Profile updated successfully',

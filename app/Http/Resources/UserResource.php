@@ -23,8 +23,7 @@ class UserResource extends JsonResource
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
-            'avatar_url' => $user->avatar_url,
-
+            'avatar_url' => $user->avatar_url ? asset('storage/' . $user->avatar_url) : null,
             'stats' => [
                 'xp' => $user->xp_total,
                 'gems' => $user->gems,

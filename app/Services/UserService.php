@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class UserService
 {
@@ -46,23 +47,34 @@ class UserService
      */
     public function getLeaderboard(): Collection
     {
-        return User::select('id', 'name', 'avatar_url', 'xp_total', 'streak')
-            ->orderByDesc('xp_total')
+        $users = User::orderByDesc('xp_total')
             ->limit(10)
             ->get();
+
+        return $users->map(function ($user, $index) {
+            return [
+                'user' => $user,
+                'rank' => $index + 1,
+            ];
+        });
     }
 
     /**
      * Update profil user (Nama & Avatar)
      */
-    public function updateProfile(User $user, array $data): User
+    public function updateProfile(User $user, array $data, $avatarFile = null): User
     {
         if (isset($data['name'])) {
             $user->name = $data['name'];
         }
 
-        if (isset($data['avatar_url'])) {
-            $user->avatar_url = $data['avatar_url'];
+        if ($avatarFile) {
+            if ($user->avatar_url && Storage::disk('public')->exists($user->avatar_url)) {
+                Storage::disk('public')->delete($user->avatar_url);
+            }
+
+            $path = $avatarFile->store('avatars', 'public');
+            $user->avatar_url = $path; // Simpan path-nya ke DB
         }
 
         $user->save();
