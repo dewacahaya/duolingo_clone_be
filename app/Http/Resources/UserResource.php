@@ -17,7 +17,7 @@ class UserResource extends JsonResource
 
         $user = $this->resource['user'] ?? $this->resource;
         $rank = $this->resource['rank'] ?? null;
-        $nextHeart = $this->resource['next_heart_in'] ?? null;
+        $nextEnergy = $this->resource['next_energy_in'] ?? null;
 
         return [
             'id' => $user->id,
@@ -29,9 +29,9 @@ class UserResource extends JsonResource
                 'xp' => $user->xp_total,
                 'gems' => $user->gems,
                 'streak' => $user->streak,
-                'hearts' => $user->hearts,
+                'energy' => $user->hearts,
                 'rank' => $rank,
-                'next_heart_in' => $nextHeart,
+                'next_heart_in' => $nextEnergy,
             ],
 
             'joined_at' => $user->created_at->format('d M Y'),

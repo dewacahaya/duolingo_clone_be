@@ -10,8 +10,11 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 class UserController extends Controller
 {
-    public function __construct(protected UserService $userService)
+    protected $userService;
+
+    public function __construct(UserService $userService)
     {
+        $this->userService = $userService;
     }
 
     /**
@@ -47,7 +50,7 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => 'string|max:50',
-            'avatar_url' => 'nullable|url'
+            'avatar_url' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         $user = $this->userService->updateProfile($request->user(), $validated);

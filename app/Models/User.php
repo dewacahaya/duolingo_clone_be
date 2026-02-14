@@ -24,8 +24,8 @@ class User extends Authenticatable
         'password',
         'xp_total',
         'gems',
-        'hearts',
-        'hearts_replenished_at',
+        'energy',
+        'energy_replenished_at',
         'streak',
         'last_study_at',
         'avatar_url',
@@ -52,7 +52,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'last_study_at' => 'datetime',
-            'hearts_replenished_at' => 'datetime',
+            'energy_replenished_at' => 'datetime',
         ];
     }
 
@@ -76,8 +76,8 @@ class User extends Authenticatable
         return $this->hasMany(UserCharacterProgress::class);
     }
 
-    public function hasHearts()
+    public function hasEnergy()
     {
-        return $this->hearts > 0;
+        return $this->energy > 0;
     }
 }

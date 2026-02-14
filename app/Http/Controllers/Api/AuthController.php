@@ -4,8 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Http\Client\Request;
-use Illuminate\Http\Request as HttpRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Validation\ValidationException;
@@ -40,26 +39,21 @@ class AuthController extends Controller
             );
 
             if ($user->wasRecentlyCreated) {
-                $user->hearts = 5;
+                $user->energy = 5;
                 $user->xp_total = 0;
                 $user->save();
             }
-
             $token = $user->createToken('auth_token')->plainTextToken;
-
             $frontendUrl = config('app.frontend_url') . '/auth/callback?token=' . $token;
-
             return redirect()->away($frontendUrl);
-
         } catch (\Exception $e) {
             // \Log::error('Socialite Error: ' . $e->getMessage());
-
             $frontendUrl = config('app.frontend_url', 'http://localhost:3000') . '/login?error=auth_failed';
             return redirect()->away($frontendUrl);
         }
     }
 
-    public function register(HttpRequest $request)
+    public function register(Request $request)
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
@@ -71,7 +65,7 @@ class AuthController extends Controller
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-            'hearts' => 5,
+            'energy' => 5,
             'xp_total' => 0,
             'streak' => 0
         ]);

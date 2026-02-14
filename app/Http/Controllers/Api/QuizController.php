@@ -25,9 +25,11 @@ class QuizController extends Controller
         $user = $request->user();
         $maxQuestions = 10;
 
-        if ($user->hearts <= 0) {
+        if ($user->energy <= 0) {
             return response()->json(['message' => 'Nyawa habis! Tunggu regenerasi.'], 403);
         }
+
+        $user->decrement('energy');
 
         $remedialQuestions = Question::where('unit_id', $unit_id)
             ->whereHas('wrongAnswers', function ($q) use ($user) {
@@ -113,9 +115,9 @@ class QuizController extends Controller
             $score = ($totalQuestions > 0) ? round(($correctCount / $totalQuestions) * 100) : 0;
             $isPassed = $score >= $this->passingGrade;
 
-            if (!$isPassed) {
-                $user->decrement('hearts');
-            }
+            // if (!$isPassed) {
+            //     $user->decrement('energy');
+            // }
 
             $xpGained = $score;
             $user->increment('xp_total', $xpGained);
@@ -179,7 +181,7 @@ class QuizController extends Controller
                 'score' => $score,
                 'is_passed' => $isPassed,
                 'xp_gained' => $xpGained,
-                'hearts_left' => $user->fresh()->hearts,
+                'energy_left' => $user->fresh()->energy,
                 'unlocked_unit_id' => $unlockedUnitId,
                 'ai_feedback_summary' => $aiFeedback
             ]);

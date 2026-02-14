@@ -4,11 +4,13 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class UserService
 {
+
+    const max_energy = 5;
+    const regen_interval = 60;
     /**
      * Mengambil data user lengkap dengan kalkulasi ranking & regenerasi nyawa
      */
@@ -16,7 +18,7 @@ class UserService
     {
         // 1. Cek & Regenerasi Nyawa (Logic Duolingo)
         // Jika nyawa < 5, cek apakah sudah waktunya nambah?
-        $this->processHeartRegeneration($user);
+        $this->processEnergyRegeneration($user);
 
         // 2. Hitung Ranking Global User
         // (Cara cepat: hitung berapa orang yang XP-nya lebih tinggi + 1)
@@ -24,9 +26,18 @@ class UserService
 
         // 3. Siapkan data tambahan
         return [
-            'user' => $user,
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'avatar_url' => $user->avatar_url ? asset('storage/' . $user->avatar_url) : null,
+            'stats' => [
+                'xp' => $user->xp_total,
+                'energy' => $user->energy,
+                'streak' => $user->streak,
+                'gems' => $user->gems ?? 0,
+            ],
             'rank' => $rank,
-            'next_heart_in' => $this->calculateNextHeartTime($user),
+            'next_energy_in' => $this->calculateNextEnergyTime($user),
         ];
     }
 
@@ -46,14 +57,15 @@ class UserService
      */
     public function updateProfile(User $user, array $data): User
     {
-        // Jika ada logic validasi bisnis tambahan, taruh di sini
-        // Contoh: User Premium bisa ganti warna nama, dsb.
+        if (isset($data['name'])) {
+            $user->name = $data['name'];
+        }
 
-        $user->update([
-            'name' => $data['name'] ?? $user->name,
-            'avatar_url' => $data['avatar_url'] ?? $user->avatar_url,
-        ]);
+        if (isset($data['avatar_url'])) {
+            $user->avatar_url = $data['avatar_url'];
+        }
 
+        $user->save();
         return $user;
     }
 
@@ -61,47 +73,61 @@ class UserService
 
     /**
      * Logic Regenerasi Nyawa:
-     * Menambah 1 hati setiap 2 jam (contoh) jika hati < 5
+     * Menambah 1 hati setiap 1 jam (contoh) jika hati < 5
      */
-    private function processHeartRegeneration(User $user): void
+    private function processEnergyRegeneration(User $user): void
     {
-        if ($user->hearts >= 5) {
+        if ($user->energy >= self::max_energy) {
+            if ($user->energy_replenished_at) {
+                $user->update(['energy_replenished_at' => null]);
+            }
             return;
         }
 
-        $lastReplenish = $user->hearts_replenished_at
-            ? Carbon::parse($user->hearts_replenished_at)
-            : Carbon::now()->subHours(5); // Default lama
+        if (!$user->energy_replenished_at) {
+            $user->update(['energy_replenished_at' => Carbon::now()]);
+            return;
+        }
 
-        // Hitung selisih waktu dalam jam
-        $hoursPassed = $lastReplenish->diffInHours(Carbon::now());
+        $lastReplenish = Carbon::parse($user->energy_replenished_at);
+        $now = Carbon::now();
 
-        if ($hoursPassed >= 1) {
-            // Tambah hati sesuai jam yang berlalu (max mentok di 5)
-            $heartsToAdd = floor($hoursPassed / 2); // Misal: 1 hati tiap 2 jam
+        $minutesPassed = $lastReplenish->diffInMinutes($now);
+        $energyToAdd = floor($minutesPassed / self::regen_interval);
 
-            // Logic sederhana: kalau lewat 4 jam, tambah 1 hati (bisa disesuaikan)
-            // Di sini kita buat logic: Setiap akses, kalau sudah lewat waktu cooldown, tambah 1.
-            $newHearts = min(5, $user->hearts + 1); // Tambah 1 hati per cycle akses valid
+        if ($energyToAdd > 0) {
+            $newenergy = min(self::regen_interval, $user->energy + $energyToAdd);
 
-            if ($newHearts > $user->hearts) {
-                $user->hearts = $newHearts;
-                $user->hearts_replenished_at = Carbon::now();
-                $user->save();
+            if ($newenergy == self::regen_interval) {
+                $user->energy = $newenergy;
+                $user->energy_replenished_at = null;
+            } else {
+                $user->energy = $newenergy;
+                $user->energy_replenished_at = $lastReplenish->addMinutes($energyToAdd * self::regen_interval);
             }
+
+            $user->save();
         }
     }
 
-    private function calculateNextHeartTime(User $user): ?string
+    private function calculateNextEnergyTime(User $user): ?string
     {
-        if ($user->hearts >= 5)
+        if ($user->energy >= self::max_energy || !$user->energy_replenished_at) {
             return null;
+        }
 
-        // Kapan hati berikutnya muncul? (Misal 2 jam dari terakhir replenish)
-        $lastReplenish = $user->hearts_replenished_at
-            ? Carbon::parse($user->hearts_replenished_at)
-            : Carbon::now();
+        $lastReplenish = Carbon::parse($user->energy_replenished_at);
+        $nextEnergyTime = $lastReplenish->addMinutes(self::regen_interval);
 
-        return $lastReplenish->addHours(2)->diffForHumans(); // "in 1 hour"
+        $now = Carbon::now();
+
+        $diff = $nextEnergyTime->diff($now);
+        $hours = $diff->h;
+        $minutes = $diff->i;
+
+        if ($hours > 0) {
+            return "{$hours}h {$minutes}m";
+        }
+        return "{$minutes}m";
     }
 }

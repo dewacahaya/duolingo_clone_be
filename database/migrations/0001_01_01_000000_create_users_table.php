@@ -17,19 +17,15 @@ return new class extends Migration {
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable();
 
-            // Kolom Gamifikasi
-            $table->integer('xp_total')->default(0)->index(); // Index untuk Leaderboard cepat
-            $table->integer('gems')->default(0); // Mata uang in-game
+            $table->integer('xp_total')->default(0)->index();
+            $table->integer('gems')->default(0);
 
-            // Sistem Nyawa (Hearts)
-            $table->integer('hearts')->default(5);
-            $table->timestamp('hearts_replenished_at')->nullable(); // Untuk hitung mundur regen nyawa
+            $table->integer('energy')->default(5);
+            $table->timestamp('energy_replenished_at')->nullable();
 
-            // Streak Logic
             $table->integer('streak')->default(0);
             $table->timestamp('last_study_at')->nullable();
 
-            // Profile
             $table->string('avatar_url')->nullable();
 
             $table->rememberToken();

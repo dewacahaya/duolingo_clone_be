@@ -5,7 +5,6 @@ use App\Http\Controllers\Api\CurriculumController;
 use App\Http\Controllers\Api\QuizController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\WritingController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,7 +19,7 @@ if (app()->environment('local')) {
             [
                 'name' => 'Dev Tester',
                 'password' => bcrypt('password'),
-                'hearts' => 5,
+                'energy' => 5,
                 'xp_total' => 0
             ]
         );
@@ -49,8 +48,6 @@ Route::prefix('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth:sanctum')->group(function () {
-
-    // --- Auth & User ---
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [UserController::class, 'me']);
     Route::post('/me/update', [UserController::class, 'update']);
