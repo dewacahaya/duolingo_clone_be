@@ -9,6 +9,7 @@ use App\Models\Unit;
 use App\Models\UserProgress;
 use App\Models\UserWrongAnswer;
 use App\Services\GeminiService;
+use App\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +26,12 @@ class QuizController extends Controller
         $user = $request->user();
         $maxQuestions = 10;
 
-        if ($user->energy <= 0) {
+        $userService = app(UserService::class);
+        $userService->getUserProfile($user);
+
+        $user->refresh();
+
+        if ($user->energy < 1) {
             return response()->json(['message' => 'Nyawa habis! Tunggu regenerasi.'], 403);
         }
 
@@ -54,6 +60,7 @@ class QuizController extends Controller
         }
 
         if ($finalQuestions->isEmpty()) {
+            $user->increment('energy');
             return response()->json(['message' => 'Soal belum tersedia untuk unit ini.'], 404);
         }
 

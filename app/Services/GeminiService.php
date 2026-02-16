@@ -63,11 +63,13 @@ class GeminiService
 
         try {
             /** @var \Illuminate\Http\Client\Response $response */
-            $response = Http::withoutVerifying()->post($url, [
-                'contents' => [
-                    ['parts' => [['text' => $finalPrompt]]]
-                ],
-            ]);
+            $response = Http::withoutVerifying()
+                ->timeout(60)
+                ->post($url, [
+                    'contents' => [
+                        ['parts' => [['text' => $finalPrompt]]]
+                    ],
+                ]);
 
             if ($response->failed()) {
                 echo "\n\n🔥 API ERROR DARI GOOGLE:\n";
@@ -116,41 +118,63 @@ class GeminiService
      */
     public function generateQuestions(string $topic, int $count = 10, string $difficulty = 'easy')
     {
-
         $difficultyInstruction = match ($difficulty) {
             'medium' => 'Gunakan kosakata yang sedikit lebih variatif namun tetap level N5.',
             'hard' => 'Gunakan kalimat yang lebih kompleks dan campuran Kanji N5.',
             default => 'Fokus pada pengenalan dasar dan kosakata simpel.',
         };
 
+        $upperDifficulty = strtoupper($difficulty);
+
         $prompt = "Kamu adalah guru bahasa Jepang profesional setingkat Native Level. Buatlah $count soal kuis untuk topik: '$topic'.
 
-        LEVEL KESULITAN: $difficulty (Upper Case).
+        LEVEL KESULITAN: $upperDifficulty.
         INSTRUKSI KHUSUS: $difficultyInstruction
 
         ATURAN PENTING:
         1. Gunakan BAHASA INDONESIA untuk instruksi, penjelasan soal, dan feedback.
         2. Gunakan huruf Hiragana, Katakana, dan Kanji (N5) dasar sesuai konteks.
-        3. Field 'answer' HARUS sama persis dengan salah satu string di dalam 'options'.
-        4. Field 'explanation' WAJIB ADA dan menjelaskan kenapa jawaban tersebut benar secara edukatif.
-        5. Tipe soal berupa 'multiple_choice', 'matching', 'missing_sentence'.
-        6. Pastikan field 'difficulty' di dalam JSON bernilai '$difficulty'.
+        3. Field 'explanation' WAJIB ADA dan menjelaskan secara edukatif.
+        4. Buat variasi dari 3 tipe soal berikut secara acak: 'multiple_choice', 'missing_sentence', dan 'arrange_words'.
+        5. Pastikan field 'difficulty' di dalam JSON bernilai '$difficulty' (huruf kecil).
 
-        Return ONLY raw JSON with this exact structure:
+        CONTOH FORMAT JSON YANG DIWAJIBKAN (Berikan variasi tipe soal seperti ini):
         {
             \"questions\": [
                 {
-                    \"type\": \"tipe_soal\",
+                    \"type\": \"multiple_choice\",
                     \"difficulty\": \"$difficulty\",
                     \"content\": {
-                        \"question\": \"Pertanyaan dalam bahasa Jepang/Indonesia?\",
-                        \"options\": [\"Pilihan A\", \"Pilihan B\", \"Pilihan C\", \"Pilihan D\"],
-                        \"answer\": \"Pilihan B\",
-                        \"explanation\": \"Penjelasan detail kenapa Pilihan B benar dan kenapa yang lain salah.\"
+                        \"question\": \"Apa arti dari kata 'Konnichiwa'?\",
+                        \"options\": [\"Selamat Pagi\", \"Selamat Siang\", \"Selamat Malam\", \"Halo\"],
+                        \"answer\": \"Selamat Siang\",
+                        \"explanation\": \"Konnichiwa digunakan untuk sapaan dari siang hingga sore hari.\"
+                    }
+                },
+                {
+                    \"type\": \"missing_sentence\",
+                    \"difficulty\": \"$difficulty\",
+                    \"content\": {
+                        \"question\": \"Lengkapi kalimat berikut: Kore ___ pen desu. (Ini adalah pulpen)\",
+                        \"options\": [\"wa\", \"ga\", \"wo\", \"ni\"],
+                        \"answer\": \"wa\",
+                        \"explanation\": \"Partikel 'wa' digunakan sebagai penanda subjek atau topik kalimat.\"
+                    }
+                },
+                {
+                    \"type\": \"arrange_words\",
+                    \"difficulty\": \"$difficulty\",
+                    \"content\": {
+                        \"question\": \"Terjemahkan dan susun kata berikut: 'Saya makan sushi.'\",
+                        \"words\": [\"sushi\", \"Watashi\", \"tabemasu\", \"wa\", \"wo\"],
+                        \"answer\": \"Watashi wa sushi wo tabemasu\",
+                        \"explanation\": \"Pola kalimat bahasa Jepang adalah SOP (Subjek-Objek-Predikat).\"
                     }
                 }
             ]
-        }";
+        }
+
+        Return ONLY raw JSON. Start with { and end with }.";
 
         return $this->askGemini($prompt, true);
     }
