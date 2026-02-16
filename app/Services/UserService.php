@@ -26,17 +26,22 @@ class UserService
         $rank = User::where('xp_total', '>', $user->xp_total)->count() + 1;
 
         // 3. Siapkan data tambahan
+        // return [
+        //     'id' => $user->id,
+        //     'name' => $user->name,
+        //     'email' => $user->email,
+        //     'avatar_url' => $user->avatar_url ? asset('storage/' . $user->avatar_url) : null,
+        //     'stats' => [
+        //         'xp' => $user->xp_total,
+        //         'energy' => $user->energy,
+        //         'streak' => $user->streak,
+        //         'gems' => $user->gems ?? 0,
+        //     ],
+        //     'rank' => $rank,
+        //     'next_energy_in' => $this->calculateNextEnergyTime($user),
+        // ];
         return [
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'avatar_url' => $user->avatar_url ? asset('storage/' . $user->avatar_url) : null,
-            'stats' => [
-                'xp' => $user->xp_total,
-                'energy' => $user->energy,
-                'streak' => $user->streak,
-                'gems' => $user->gems ?? 0,
-            ],
+            'user' => $user, // Ini adalah Object Model User
             'rank' => $rank,
             'next_energy_in' => $this->calculateNextEnergyTime($user),
         ];
