@@ -16,7 +16,15 @@ class UserProgress extends Model
         'unit_id',
         'status',
         'stars',
-        'high_score'
+        'high_score',
+        'current_level',
+        'is_completed',
+        'is_locked'
+    ];
+
+    protected $casts = [
+        'is_completed' => 'boolean',
+        'is_locked' => 'boolean',
     ];
 
     public function user()

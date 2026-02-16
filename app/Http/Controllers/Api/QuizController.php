@@ -13,6 +13,7 @@ use App\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class QuizController extends Controller
 {
@@ -156,18 +157,16 @@ class QuizController extends Controller
                 $progress->is_completed = true;
 
                 // Cari unit selanjutnya
-                $nextUnit = Unit::where('chapter_id', $unit->chapter_id)
-                    ->where('order_sequence', '>', $unit->order_sequence)
+                $nextUnit = Unit::where('order_sequence', '>', $unit->order_sequence)
                     ->orderBy('order_sequence', 'asc')
                     ->first();
 
                 if ($nextUnit) {
-                    // Buka next unit
                     UserProgress::firstOrCreate(
                         ['user_id' => $user->id, 'unit_id' => $nextUnit->id],
                         [
-                            'is_locked' => false,
-                            'is_completed' => false,
+                            'is_locked' => 0,
+                            'is_completed' => 0,
                             'current_level' => 0
                         ]
                     );
