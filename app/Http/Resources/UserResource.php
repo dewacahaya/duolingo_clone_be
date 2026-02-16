@@ -28,7 +28,7 @@ class UserResource extends JsonResource
                 'xp' => $user->xp_total,
                 'gems' => $user->gems,
                 'streak' => $user->streak,
-                'energy' => $user->hearts,
+                'energy' => $user->energy,
                 'rank' => $rank,
                 'next_heart_in' => $nextEnergy,
             ],
