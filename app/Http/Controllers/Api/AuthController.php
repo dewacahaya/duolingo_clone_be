@@ -46,7 +46,7 @@ class AuthController extends Controller
                 ['email' => $socialUser->getEmail()],
                 [
                     'name' => $socialUser->getName(),
-                    'password' => $socialUser->token,
+                    'password' => Hash::make(uniqid()),
                     'avatar_url' => $socialUser->getAvatar(),
                 ]
             );
@@ -57,11 +57,11 @@ class AuthController extends Controller
                 $user->save();
             }
             $token = $user->createToken('auth_token')->plainTextToken;
-            $frontendUrl = config('app.frontend_url') . '/auth/callback?token=' . $token;
+            $frontendUrl = env('FRONTEND_URL', 'http://127.0.0.1:3000') . '/auth/callback?token=' . $token;
             return redirect()->away($frontendUrl);
         } catch (\Exception $e) {
             // \Log::error('Socialite Error: ' . $e->getMessage());
-            $frontendUrl = config('app.frontend_url', 'http://localhost:3000') . '/login?error=auth_failed';
+            $frontendUrl = env('FRONTEND_URL', 'http://127.0.0.1:3000') . '/login?error=auth_failed';
             return redirect()->away($frontendUrl);
         }
     }

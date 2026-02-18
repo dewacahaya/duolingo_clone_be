@@ -38,7 +38,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 
     // Socialite (Google)
-    Route::get('/google/redirect', [AuthController::class, 'redirectToProvider']);
+    Route::get('/google', [AuthController::class, 'redirectToProvider']);
     Route::get('/google/callback', [AuthController::class, 'handleProviderCallback']);
 });
 
