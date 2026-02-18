@@ -8,6 +8,10 @@ use App\Services\UserService;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
+/**
+ * @group 👤 Profil & Papan Peringkat
+ * API untuk mengambil data statistik pribadi pengguna, mengubah profil, serta melihat peringkat global (Leaderboard).
+ */
 class UserController extends Controller
 {
     protected $userService;
@@ -18,7 +22,27 @@ class UserController extends Controller
     }
 
     /**
-     * Get Current User Profile (Me)
+     * Get Profil Saya (Me)
+     * * Mengambil informasi lengkap pengguna yang sedang login.
+     * Setiap kali endpoint ini dipanggil, sistem akan melakukan *Lazy Evaluation* untuk meregenerasi Energy (nyawa) jika waktu tunggunya sudah terpenuhi.
+     * * @authenticated
+     * @response {
+     * "data": {
+     * "id": 1,
+     * "name": "Budi Santoso",
+     * "email": "budi@mail.com",
+     * "avatar": null,
+     * "stats": {
+     * "xp": 1250,
+     * "gems": 0,
+     * "streak": 5,
+     * "energy": 4,
+     * "rank": 12,
+     * "next_energy_in": "15m 30s"
+     * },
+     * "joined_at": "18 Feb 2026"
+     * }
+     * }
      */
     public function me(Request $request): JsonResponse
     {
@@ -31,7 +55,25 @@ class UserController extends Controller
     }
 
     /**
-     * Get Global Leaderboard
+     * Papan Peringkat (Leaderboard)
+     * * Menampilkan daftar 50 besar pengguna dengan skor XP (Experience Points) tertinggi.
+     * * @authenticated
+     * @response {
+     * "data": [
+     * {
+     * "id": 1,
+     * "name": "Pro Gamer JPN",
+     * "email": "pro@mail.com",
+     * "avatar": "https://url-ke-gambar.com/avatar.jpg",
+     * "stats": {
+     * "xp": 9500,
+     * "gems": 0,
+     * "streak": 30,
+     * "energy": 5
+     * }
+     * }
+     * ]
+     * }
      */
     public function leaderboard(): JsonResponse
     {
@@ -44,7 +86,23 @@ class UserController extends Controller
     }
 
     /**
-     * Update Profile
+     * Update Profil
+     * * Mengubah nama atau foto profil (Avatar) pengguna.
+     * Untuk mengunggah avatar, pastikan mengirim request dalam bentuk `multipart/form-data`.
+     * * @authenticated
+     * @bodyParam name string optional Nama baru pengguna. Example: Budi Keren
+     * @bodyParam avatar file optional File gambar untuk foto profil (JPG/PNG, Max: 2MB).
+     * * @response {
+     * "message": "Profile updated successfully",
+     * "data": {
+     * "id": 1,
+     * "name": "Budi Keren",
+     * "avatar": "http://localhost:8000/storage/avatars/random-string.png",
+     * "stats": {
+     * "xp": 1250
+     * }
+     * }
+     * }
      */
     public function update(Request $request)
     {

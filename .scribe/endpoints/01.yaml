@@ -1,0 +1,305 @@
+name: '🔐 Autentikasi & Akun'
+description: 'API untuk pendaftaran, login (Manual & Google OAuth), serta pembuatan token sesi menggunakan Laravel Sanctum.'
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/auth/register
+    metadata:
+      custom: []
+      groupName: '🔐 Autentikasi & Akun'
+      groupDescription: 'API untuk pendaftaran, login (Manual & Google OAuth), serta pembuatan token sesi menggunakan Laravel Sanctum.'
+      subgroup: ''
+      subgroupDescription: ''
+      title: |-
+        Register Manual
+        * Mendaftarkan pengguna baru dengan email dan password. Otomatis memberikan 5 Energy awal dan token akses.
+      description: '* @unauthenticated'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        custom: []
+        name: name
+        description: 'Nama lengkap pengguna.'
+        required: true
+        example: 'Taro Yamada'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      email:
+        custom: []
+        name: email
+        description: 'Email aktif yang belum pernah didaftarkan.'
+        required: true
+        example: taro@gmail.com
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: 'Password minimal 8 karakter.'
+        required: true
+        example: rahasia123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password_confirmation:
+        custom: []
+        name: password_confirmation
+        description: 'Konfirmasi password (wajib sama dengan password).'
+        required: true
+        example: |-
+          rahasia123
+          * @response {
+          "message": "Registration successful",
+          "token": "1|abcdef1234567890...",
+          "user": {
+          "name": "Taro Yamada",
+          "email": "taro@gmail.com",
+          "energy": 5,
+          "xp_total": 0,
+          "streak": 0,
+          "updated_at": "2026-02-18T10:00:00.000000Z",
+          "created_at": "2026-02-18T10:00:00.000000Z",
+          "id": 5
+          }
+          }
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      name: 'Taro Yamada'
+      email: taro@gmail.com
+      password: rahasia123
+      password_confirmation: |-
+        rahasia123
+        * @response {
+        "message": "Registration successful",
+        "token": "1|abcdef1234567890...",
+        "user": {
+        "name": "Taro Yamada",
+        "email": "taro@gmail.com",
+        "energy": 5,
+        "xp_total": 0,
+        "streak": 0,
+        "updated_at": "2026-02-18T10:00:00.000000Z",
+        "created_at": "2026-02-18T10:00:00.000000Z",
+        "id": 5
+        }
+        }
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+          "message": "The email has already been taken.",
+          "errors": {
+          "email": ["The email has already been taken."]
+          }
+          }
+        headers: []
+        description: 'Validasi Gagal (Email sudah dipakai)'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/auth/login
+    metadata:
+      custom: []
+      groupName: '🔐 Autentikasi & Akun'
+      groupDescription: 'API untuk pendaftaran, login (Manual & Google OAuth), serta pembuatan token sesi menggunakan Laravel Sanctum.'
+      subgroup: ''
+      subgroupDescription: ''
+      title: |-
+        Login Manual
+        * Mendapatkan token akses (Bearer Token) untuk user yang sudah terdaftar.
+      description: '* @unauthenticated'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'Email user yang valid.'
+        required: true
+        example: taro@gmail.com
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: 'Password akun.'
+        required: true
+        example: |-
+          rahasia123
+          * @response {
+          "message": "Login successful",
+          "token": "2|xyz0987654321...",
+          "user": {
+          "id": 5,
+          "name": "Taro Yamada",
+          "email": "taro@gmail.com",
+          "energy": 5,
+          "xp_total": 150,
+          "streak": 2
+          }
+          }
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      email: taro@gmail.com
+      password: |-
+        rahasia123
+        * @response {
+        "message": "Login successful",
+        "token": "2|xyz0987654321...",
+        "user": {
+        "id": 5,
+        "name": "Taro Yamada",
+        "email": "taro@gmail.com",
+        "energy": 5,
+        "xp_total": 150,
+        "streak": 2
+        }
+        }
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+          "message": "The provided credentials are incorrect.",
+          "errors": {
+          "email": ["The provided credentials are incorrect."]
+          }
+          }
+        headers: []
+        description: 'Password Salah'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/auth/google/redirect
+    metadata:
+      custom: []
+      groupName: '🔐 Autentikasi & Akun'
+      groupDescription: 'API untuk pendaftaran, login (Manual & Google OAuth), serta pembuatan token sesi menggunakan Laravel Sanctum.'
+      subgroup: ''
+      subgroupDescription: ''
+      title: |-
+        Google Login: Redirect
+        * API ini mengembalikan URL otorisasi Google. Frontend harus me-redirect user ke URL ini agar mereka bisa login menggunakan akun Google.
+      description: '* @unauthenticated'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+          "url": "https://accounts.google.com/o/oauth2/auth?client_id=..."
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/logout
+    metadata:
+      custom: []
+      groupName: '🔐 Autentikasi & Akun'
+      groupDescription: 'API untuk pendaftaran, login (Manual & Google OAuth), serta pembuatan token sesi menggunakan Laravel Sanctum.'
+      subgroup: ''
+      subgroupDescription: ''
+      title: |-
+        Logout
+        * Menghancurkan token sesi saat ini agar tidak bisa digunakan lagi.
+      description: '* @authenticated'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+          "message": "Logged out successfully"
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null

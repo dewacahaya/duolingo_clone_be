@@ -1,0 +1,187 @@
+name: '🎮 Engine Kuis & Latihan'
+description: |-
+  API untuk memulai kuis, memotong energy, dan menghitung skor kelulusan.
+  Termasuk di dalamnya adalah sistem Remedial otomatis dan Feedback AI.
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/quiz/start/{unit_id}'
+    metadata:
+      custom: []
+      groupName: '🎮 Engine Kuis & Latihan'
+      groupDescription: |-
+        API untuk memulai kuis, memotong energy, dan menghitung skor kelulusan.
+        Termasuk di dalamnya adalah sistem Remedial otomatis dan Feedback AI.
+      subgroup: ''
+      subgroupDescription: ''
+      title: |-
+        Start Kuis (Ambil Soal)
+        * Endpoint ini digunakan saat user menekan tombol "Mulai Belajar" di suatu Unit.
+      description: |-
+        Memanggil endpoint ini akan otomatis **MEMOTONG 1 ENERGY** milik user.
+        Jika ada soal yang sebelumnya salah dijawab oleh user (di unit ini), soal tersebut akan dimunculkan kembali (Remedial Mode).
+        * @authenticated
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      unit_id:
+        custom: []
+        name: unit_id
+        description: 'ID dari Unit yang akan dimainkan.'
+        required: true
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      unit_id: 5
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+      -
+        custom: []
+        status: 403
+        content: |-
+          {
+          "message": "Nyawa habis! Tunggu regenerasi."
+          }
+        headers: []
+        description: 'Energy Habis'
+      -
+        custom: []
+        status: 404
+        content: |-
+          {
+          "message": "Soal belum tersedia untuk unit ini."
+          }
+        headers: []
+        description: 'Unit Kosong'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/quiz/submit
+    metadata:
+      custom: []
+      groupName: '🎮 Engine Kuis & Latihan'
+      groupDescription: |-
+        API untuk memulai kuis, memotong energy, dan menghitung skor kelulusan.
+        Termasuk di dalamnya adalah sistem Remedial otomatis dan Feedback AI.
+      subgroup: ''
+      subgroupDescription: ''
+      title: |-
+        Submit Jawaban Kuis
+        * Endpoint pamungkas untuk mengirim semua jawaban user.
+      description: |-
+        Sistem akan menghitung skor, mengupdate XP dan Streak, membuka gembok unit selanjutnya jika lulus (skor >= 70), dan meminta Gemini AI untuk merangkum kesalahan user.
+        * @authenticated
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      unit_id:
+        custom: []
+        name: unit_id
+        description: 'ID dari unit kuis yang baru diselesaikan.'
+        required: true
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      answers:
+        custom: []
+        name: answers
+        description: 'Array berisi kumpulan jawaban user.'
+        required: true
+        example:
+          - []
+        type: 'object[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'answers[].question_id':
+        custom: []
+        name: 'answers[].question_id'
+        description: 'ID soal.'
+        required: true
+        example: 50
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      'answers[].selected':
+        custom: []
+        name: 'answers[].selected'
+        description: 'Teks jawaban yang dipilih user. Untuk tipe susun kata, gabungkan katanya.'
+        required: true
+        example: |-
+          "I"
+          * @response {
+          "score": 100,
+          "is_passed": true,
+          "xp_gained": 100,
+          "energy_left": 4,
+          "unlocked_unit_id": 6,
+          "ai_feedback_summary": "Luar biasa! Kamu menjawab semua pertanyaan dengan sempurna. Pertahankan kerjamu!"
+          }
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      unit_id: 5
+      answers:
+        -
+          question_id: 50
+          selected: |-
+            "I"
+            * @response {
+            "score": 100,
+            "is_passed": true,
+            "xp_gained": 100,
+            "energy_left": 4,
+            "unlocked_unit_id": 6,
+            "ai_feedback_summary": "Luar biasa! Kamu menjawab semua pertanyaan dengan sempurna. Pertahankan kerjamu!"
+            }
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null

@@ -13,14 +13,53 @@ use App\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
+/**
+ * @group 🎮 Engine Kuis & Latihan
+ * API untuk memulai kuis, memotong energy, dan menghitung skor kelulusan.
+ * Termasuk di dalamnya adalah sistem Remedial otomatis dan Feedback AI.
+ */
 class QuizController extends Controller
 {
-
-    protected $passingGrade = 70;
     /**
-     * Mengambil 10 soal acak untuk kuis
+     * Passing grade untuk lulus kuis (persentase).
+     *
+     * @var int
+     */
+    protected $passingGrade = 70;
+
+    /**
+     * Start Kuis (Ambil Soal)
+     * * Endpoint ini digunakan saat user menekan tombol "Mulai Belajar" di suatu Unit.
+     * Memanggil endpoint ini akan otomatis **MEMOTONG 1 ENERGY** milik user.
+     * Jika ada soal yang sebelumnya salah dijawab oleh user (di unit ini), soal tersebut akan dimunculkan kembali (Remedial Mode).
+     * * @authenticated
+     * @urlParam unit_id integer required ID dari Unit yang akan dimainkan. Example: 5
+     * * @response {
+     * "unit_id": "5",
+     * "is_remedial_mode": false,
+     * "remedial_count": 0,
+     * "questions": [
+     * {
+     * "id": 50,
+     * "unit_id": 5,
+     * "type": "multiple_choice",
+     * "difficulty": "easy",
+     * "content": {
+     * "question": "Bentuk Katakana 'エ' (E) sangat mirip dengan huruf kapital alfabet apa?",
+     * "options": ["I", "E", "T", "H"],
+     * "answer": "I",
+     * "explanation": "Secara visual, Katakana 'E' (エ) mirip dengan huruf 'I' kapital..."
+     * }
+     * }
+     * ]
+     * }
+     * @response status=403 scenario="Energy Habis" {
+     * "message": "Nyawa habis! Tunggu regenerasi."
+     * }
+     * @response status=404 scenario="Unit Kosong" {
+     * "message": "Soal belum tersedia untuk unit ini."
+     * }
      */
     public function start($unit_id, Request $request)
     {
@@ -74,7 +113,22 @@ class QuizController extends Controller
     }
 
     /**
-     * Submit hasil kuis & Generate AI Feedback
+     * Submit Jawaban Kuis
+     * * Endpoint pamungkas untuk mengirim semua jawaban user.
+     * Sistem akan menghitung skor, mengupdate XP dan Streak, membuka gembok unit selanjutnya jika lulus (skor >= 70), dan meminta Gemini AI untuk merangkum kesalahan user.
+     * * @authenticated
+     * @bodyParam unit_id integer required ID dari unit kuis yang baru diselesaikan. Example: 5
+     * @bodyParam answers object[] required Array berisi kumpulan jawaban user.
+     * @bodyParam answers[].question_id integer required ID soal. Example: 50
+     * @bodyParam answers[].selected string required Teks jawaban yang dipilih user. Untuk tipe susun kata, gabungkan katanya. Example: "I"
+     * * @response {
+     * "score": 100,
+     * "is_passed": true,
+     * "xp_gained": 100,
+     * "energy_left": 4,
+     * "unlocked_unit_id": 6,
+     * "ai_feedback_summary": "Luar biasa! Kamu menjawab semua pertanyaan dengan sempurna. Pertahankan kerjamu!"
+     * }
      */
     public function submit(Request $request, GeminiService $gemini)
     {
@@ -209,132 +263,4 @@ class QuizController extends Controller
             ], 500);
         }
     }
-
-    // public function submit(Request $request, GeminiService $gemini)
-    // {
-
-    //     $request->validate([
-    //         'unit_id' => 'required|exists:units,id',
-    //         'answers' => 'required|array',
-    //         'answers.*.question_id' => 'required|exists:questions,id',
-    //         'answers.*.selected' => 'required'
-    //     ]);
-
-    //     $user = $request->user();
-    //     $unitId = $request->unit_id;
-    //     $answers = $request->answers;
-
-    //     $correctCount = 0;
-    //     $totalQuestions = count($request->answers);
-    //     $wrongQuestionsDetails = [];
-
-
-    //     foreach ($answers as $ans) {
-    //         $question = Question::find($ans['question_id']);
-
-    //         if ($question && $ans['selected'] === $question->content['answer']) {
-    //             $correctCount++;
-    //             UserWrongAnswer::where('user_id', $user->id)
-    //                 ->where('question_id', $question->id)
-    //                 ->update(['is_mastered' => true]);
-    //         } else {
-    //             UserWrongAnswer::updateOrCreate(
-    //                 ['user_id' => $user->id, 'question_id' => $question->id],
-    //                 ['is_mastered' => false]
-    //             );
-
-    //             $wrongDetails[] = [
-    //                 'question' => $question->content['question'],
-    //                 'user_answer' => $ans['selected'],
-    //                 'correct_answer' => $question->content['answer'],
-    //                 'explanation' => $question->content['explanation']
-    //             ];
-    //         }
-    //     }
-
-    //     $score = $totalQuestions > 0 ? round(($correctCount / $totalQuestions) * 100) : 0;
-    //     $isPassed = $score >= 70;
-    //     $xpGained = $isPassed ? ($correctCount * 10) : 0;
-
-    //     if ($isPassed) {
-    //         $user->xp_total += $xpGained;
-    //         $user->last_study_at = Carbon::now();
-    //         $user->save();
-
-    //         $currentUnit = Unit::find($unitId);
-    //         $nextUnit = Unit::where('chapter_id', $currentUnit->chapter_id)
-    //             ->where('order_sequence', '>', $currentUnit->order_sequence)
-    //             ->orderBy('order_sequence', 'asc')
-    //             ->first();
-
-    //         UserProgress::updateOrCreate(
-    //             ['user_id' => $user->id, 'unit_id' => $unitId],
-    //             ['status' => 'completed', 'score' => $score]
-    //         );
-
-    //         if ($nextUnit) {
-    //             UserProgress::firstOrCreate(
-    //                 ['user_id' => $user->id, 'unit_id' => $nextUnit->id],
-    //                 ['status' => 'open', 'score' => 0]
-    //             );
-    //         }
-    //     }
-
-    //     $aiFeedback = null;
-    //     if (count($wrongDetails) > 0) {
-    //         $gemini = app(GeminiService::class);
-    //         $prompt = "Kamu adalah tutor bahasa Jepang. Muridmu baru saja salah menjawab kuis. Berikan 1 paragraf feedback singkat, ramah, dan menyemangati bahasa Indonesia tentang kesalahan ini. Fokus pada perbaikan konsepnya. Data kesalahan: " . json_encode($wrongDetails);
-
-    //         // Pakai mode teks biasa, bukan JSON
-    //         $aiFeedback = $gemini->askGemini($prompt, false);
-    //     } else {
-    //         $aiFeedback = "Sempurna! Kamu menjawab semua pertanyaan tanpa salah. Pertahankan kerjamu!";
-    //     }
-
-    //     return response()->json([
-    //         'score' => $score,
-    //         'is_passed' => $isPassed,
-    //         'correct_count' => $correctCount,
-    //         'xp_gained' => $xpGained,
-    //         'ai_feedback' => $aiFeedback
-    //     ]);
-
-    // }
-
-    // private function updateStreak($user)
-    // {
-    //     $today = Carbon::today();
-    //     $lastStudy = $user->last_study_at ? Carbon::parse($user->last_study_at)->startOfDay() : null;
-
-    //     if (!$lastStudy) {
-    //         $user->streak = 1;
-    //     } elseif ($lastStudy->isYesterday()) {
-    //         $user->streak += 1;
-    //     } elseif (!$lastStudy->isToday()) {
-    //         $user->streak = 1;
-    //     }
-
-    //     $user->last_study_at = now();
-    // }
-
-    // private function unlockNextUnit($userId, $currentUnitId)
-    // {
-    //     UserProgress::updateOrCreate(
-    //         ['user_id' => $userId, 'unit_id' => $currentUnitId],
-    //         ['status' => 'completed']
-    //     );
-
-    //     $currentUnit = Unit::find($currentUnitId);
-    //     $nextUnit = Unit::where('chapter_id', $currentUnit->chapter_id)
-    //         ->where('order_sequence', '>', $currentUnit->order_sequence)
-    //         ->orderBy('order_sequence', 'asc')
-    //         ->first();
-
-    //     if ($nextUnit) {
-    //         UserProgress::updateOrCreate(
-    //             ['user_id' => $userId, 'unit_id' => $nextUnit->id],
-    //             ['status' => 'in_progress']
-    //         );
-    //     }
-    // }
 }
