@@ -100,13 +100,21 @@ class AuthController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|unique:users',
-            'password' => 'required|string|min:8|confirmed'
+            'password' => 'required|string|min:8|confirmed',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
         ]);
+
+        $avatarUrl = null;
+        if ($request->hasFile('avatar')) {
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $avatarUrl = asset('storage/' . $path);
+        }
 
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+            'avatar_url' => $avatarUrl,
             'energy' => 5,
             'xp_total' => 0,
             'streak' => 0

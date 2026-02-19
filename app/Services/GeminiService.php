@@ -5,6 +5,8 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
+use function PHPUnit\Framework\matches;
+
 class GeminiService
 {
     protected string $apiKey;
@@ -195,11 +197,15 @@ class GeminiService
 
     public function analyzeHandwriting(string $base64Image, string $targetChar)
     {
+
+        preg_match('#^data:(image/\w+);base64,#i', $base64Image, $matches);
+        $mimeType = $matches[1] ?? 'image/png';
         $rawData = preg_replace('#^data:image/\w+;base64,#i', '', $base64Image);
 
-        $prompt = "Nilai tulisan tangan ini. Apakah ini huruf Jepang '$targetChar'?
-        Berikan skor (0-100) dan saran perbaikan singkat.
-        Output WAJIB JSON: {\"score\": 80, \"feedback\": \"...\"}";
+        $prompt = "Kamu adalah guru kaligrafi Jepang (Sensei). Nilai gambar coretan murid ini. Apakah ini huruf Jepang '$targetChar'? "
+            . "Berikan 'score' (0-100) berdasarkan kemiripan proporsinya. "
+            . "Berikan 'feedback' singkat (1-2 kalimat) dalam bahasa Indonesia, beritahu letak kesalahan goresannya jika ada. "
+            . "Output WAJIB berformat JSON murni.";
 
         $url = "{$this->baseUrl}{$this->model}:generateContent?key={$this->apiKey}";
 
@@ -211,13 +217,16 @@ class GeminiService
                         'parts' => [
                             ['text' => $prompt],
                             [
-                                'inline_data' => [
-                                    'mime_type' => 'image/png',
+                                'inlineData' => [
+                                    'mimeType' => $mimeType,
                                     'data' => $rawData
                                 ]
                             ]
                         ]
                     ]
+                ],
+                'generationConfig' => [
+                    'responseMimeType' => 'application/json',
                 ]
             ]);
 
