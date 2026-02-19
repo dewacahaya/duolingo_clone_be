@@ -106,8 +106,7 @@ class AuthController extends Controller
 
         $avatarUrl = null;
         if ($request->hasFile('avatar')) {
-            $path = $request->file('avatar')->store('avatars', 'public');
-            $avatarUrl = asset('storage/' . $path);
+            $avatarUrl = $request->file('avatar')->store('avatars', 'public');
         }
 
         $user = User::create([
