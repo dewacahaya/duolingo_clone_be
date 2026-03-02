@@ -20,7 +20,7 @@ return new class extends Migration {
             $table->integer('xp_total')->default(0)->index();
             $table->integer('gems')->default(0);
 
-            $table->integer('energy')->default(5);
+            $table->integer('energy')->default(10);
             $table->timestamp('energy_replenished_at')->nullable();
 
             $table->integer('streak')->default(0);
