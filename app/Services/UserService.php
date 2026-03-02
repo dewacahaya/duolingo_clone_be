@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\Storage;
 class UserService
 {
 
-    const max_energy = 5;
-    const regen_interval = 60;
+    const max_energy = 10;
+    const regen_interval = 15;
     /**
      * Mengambil data user lengkap dengan kalkulasi ranking & regenerasi nyawa
      */
@@ -20,6 +20,8 @@ class UserService
         // 1. Cek & Regenerasi Nyawa (Logic Duolingo)
         // Jika nyawa < 5, cek apakah sudah waktunya nambah?
         $this->processEnergyRegeneration($user);
+
+        $this->processStreakCheck($user);
 
         // 2. Hitung Ranking Global User
         // (Cara cepat: hitung berapa orang yang XP-nya lebih tinggi + 1)
@@ -87,6 +89,27 @@ class UserService
     }
 
     // --- PRIVATE HELPER METHODS ---
+
+    /**
+     * Logic Pengecekan Streak:
+     * Kalau user terakhir main sebelum kemarin, reset streak ke 0.
+     */
+    private function processStreakCheck(User $user): void
+    {
+        // Kalau belum pernah main atau streak sudah 0, aman. Abaikan saja.
+        if (!$user->last_study_at || $user->streak == 0) {
+            return;
+        }
+
+        $lastStudy = Carbon::parse($user->last_study_at)->startOfDay();
+        $yesterday = Carbon::yesterday(); // Waktu jam 00:00:00 hari kemarin
+
+        // Jika terakhir main H-2 atau lebih lama (sebelum kemarin)
+        if ($lastStudy->lessThan($yesterday)) {
+            $user->streak = 0;
+            $user->save();
+        }
+    }
 
     /**
      * Logic Regenerasi Nyawa:

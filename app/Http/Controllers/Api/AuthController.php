@@ -52,7 +52,7 @@ class AuthController extends Controller
             );
 
             if ($user->wasRecentlyCreated) {
-                $user->energy = 5;
+                $user->energy = 10;
                 $user->xp_total = 0;
                 $user->save();
             }
@@ -114,7 +114,7 @@ class AuthController extends Controller
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             // 'avatar_url' => $avatarUrl,
-            'energy' => 5,
+            'energy' => 10,
             'xp_total' => 0,
             'streak' => 0
         ]);
