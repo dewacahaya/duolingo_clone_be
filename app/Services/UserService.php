@@ -136,9 +136,9 @@ class UserService
         $energyToAdd = floor($minutesPassed / self::regen_interval);
 
         if ($energyToAdd > 0) {
-            $newenergy = min(self::regen_interval, $user->energy + $energyToAdd);
+            $newenergy = min(self::max_energy, $user->energy + $energyToAdd);
 
-            if ($newenergy == self::regen_interval) {
+            if ($newenergy == self::max_energy) {
                 $user->energy = $newenergy;
                 $user->energy_replenished_at = null;
             } else {
