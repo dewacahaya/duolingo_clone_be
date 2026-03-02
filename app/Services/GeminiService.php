@@ -187,12 +187,21 @@ class GeminiService
     public function generateFeedback(array $results)
     {
         $resultsJson = json_encode($results);
-        $prompt = "Kamu adalah guru bahasa Jepang profesional setingkat Native Level. Berikan feedback personal untuk setiap soal berikut:
+        $prompt = "Kamu adalah guru bahasa Jepang profesional setingkat Native Level. Berikan feedback personal untuk hasil kuis berikut:
         Hasil: $resultsJson.
-        Skip feedback untuk jawaban benar, dan berikan penjelasan singkat untuk jawaban salah dan alasan kenapa jawaban tersebut salah.
-        Return JSON: { 'ai_feedback_summary': '...' }";
 
-        return $this->askGemini($prompt);
+        INSTRUKSI:
+        1. Abaikan/skip soal yang dijawab dengan benar.
+        2. Rangkum penjelasan untuk soal-soal yang dijawab salah secara edukatif, ramah, dan suportif. Beritahu kenapa jawaban mereka salah.
+        3. Tulis dalam 1-2 paragraf singkat saja.
+
+        ATURAN PENTING:
+        Keluarkan HANYA teks paragraf biasa (plain text). DILARANG KERAS menggunakan format JSON, dan JANGAN menggunakan markdown backticks (```). Langsung berikan kalimatnya.";
+
+        $responseText = $this->askGemini($prompt);
+        $cleanText = preg_replace('/```(?:json|text|html)?\s*(.*?)\s*```/is', '$1', $responseText);
+
+        return trim($cleanText);
     }
 
     public function analyzeHandwriting(string $base64Image, string $targetChar)
