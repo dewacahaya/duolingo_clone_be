@@ -26,19 +26,18 @@ class GenerateQuiz extends Command
                 continue;
             }
 
-            $this->info("\n🧠 Memproses Unit: {$unit->name}...");
+            $this->info("\n🧠 Memproses Unit: {$unit->name}... (Seq: {$unit->order_sequence})...");
 
-            $difficulty = 'easy';
-            if ($unit->order_sequence > 3)
-                $difficulty = 'medium';
-            if ($unit->order_sequence > 7)
-                $difficulty = 'hard';
+            $targetDifficulty = match (true) {
+                $unit->order_sequence > 7 => 'hard',
+                $unit->order_sequence > 3 => 'medium',
+                default => 'easy',
+            };
 
-            $this->info("   🎚️  Target Difficulty: " . strtoupper($difficulty));
-
+            $this->info("   🎚️  Target Difficulty: " . strtoupper($targetDifficulty));
             $this->info("   🤖 Sedang request ke Gemini...");
 
-            $response = $gemini->generateQuestions($unit->topic_keyword, 10, $difficulty);
+            $response = $gemini->generateQuestions($unit->topic_keyword, 10, $targetDifficulty);
 
             if (isset($response['questions']) && is_array($response['questions'])) {
                 $count = 0;
@@ -47,7 +46,7 @@ class GenerateQuiz extends Command
                         Question::create([
                             'unit_id' => $unit->id,
                             'type' => $q['type'] ?? 'multiple_choice',
-                            'difficulty' => $q['difficulty'] ?? $difficulty,
+                            'difficulty' => $targetDifficulty,
                             'content' => $q['content'],
                             'is_ai_generated' => true
                         ]);
