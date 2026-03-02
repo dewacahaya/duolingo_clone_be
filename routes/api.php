@@ -60,6 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // --- Quiz System ---
     Route::get('/quiz/start/{unit_id}', [QuizController::class, 'start']);
     Route::post('/quiz/submit', [QuizController::class, 'submit']);
+    Route::get('/quiz/history/{unit_id}', [QuizController::class, 'history']);
 
     // --- Writing Practice (Fitur Canvas) ---
     // 1. Ambil daftar huruf (Hiragana/Katakana)

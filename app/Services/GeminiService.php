@@ -184,22 +184,56 @@ class GeminiService
     /**
      * 3. Generate Feedback Personal
      */
-    public function generateFeedback(array $results)
+    // public function generateFeedback(array $results)
+    // {
+    //     $resultsJson = json_encode($results);
+    //     $prompt = "Kamu adalah guru bahasa Jepang profesional setingkat Native Level. Berikan feedback personal untuk hasil kuis berikut:
+    //     Hasil: $resultsJson.
+
+    //     INSTRUKSI:
+    //     1. Abaikan/skip soal yang dijawab dengan benar.
+    //     2. Rangkum penjelasan untuk soal-soal yang dijawab salah secara edukatif, ramah, dan suportif. Beritahu kenapa jawaban mereka salah.
+    //     3. Tulis dalam 1-2 paragraf singkat saja.
+
+    //     ATURAN PENTING:
+    //     Keluarkan HANYA teks paragraf biasa (plain text). DILARANG KERAS menggunakan format JSON, dan JANGAN menggunakan markdown backticks (```). Langsung berikan kalimatnya.";
+
+    //     $responseText = $this->askGemini($prompt);
+    //     $cleanText = preg_replace('/```(?:json|text|html)?\s*(.*?)\s*```/is', '$1', $responseText);
+
+    //     return trim($cleanText);
+    // }
+
+    /**
+     * Generate feedback Markdown murni. Memuji jika sempurna, mengoreksi jika ada salah.
+     */
+    public function generateFeedback(array $wrongDetails, string $topic, int $score)
     {
-        $resultsJson = json_encode($results);
-        $prompt = "Kamu adalah guru bahasa Jepang profesional setingkat Native Level. Berikan feedback personal untuk hasil kuis berikut:
-        Hasil: $resultsJson.
+        // Jika array kosong, beri tahu AI bahwa user menjawab benar semua
+        $wrongDataInfo = empty($wrongDetails)
+            ? "TIDAK ADA KESALAHAN. Murid menjawab semua soal dengan BENAR."
+            : json_encode($wrongDetails);
 
-        INSTRUKSI:
-        1. Abaikan/skip soal yang dijawab dengan benar.
-        2. Rangkum penjelasan untuk soal-soal yang dijawab salah secara edukatif, ramah, dan suportif. Beritahu kenapa jawaban mereka salah.
-        3. Tulis dalam 1-2 paragraf singkat saja.
+        $prompt = "Kamu adalah guru bahasa Jepang (Sensei) yang ramah dan suportif. Muridmu baru saja menyelesaikan kuis dengan topik '$topic' dan mendapat skor $score.
 
-        ATURAN PENTING:
-        Keluarkan HANYA teks paragraf biasa (plain text). DILARANG KERAS menggunakan format JSON, dan JANGAN menggunakan markdown backticks (```). Langsung berikan kalimatnya.";
+        DATA KESALAHAN SOAL:
+        $wrongDataInfo
+
+        INSTRUKSI KHUSUS:
+        1. Jika skor 100 (tidak ada kesalahan), berikan pujian yang sangat memotivasi dan hangat agar murid terus semangat belajar bahasa Jepang.
+        2. Jika ada kesalahan, tetap puji usahanya, lalu berikan penjelasan singkat dan mudah dipahami HANYA untuk soal-soal yang dijawab salah di atas.
+        3. Gunakan bahasa Indonesia yang santai tapi profesional.
+
+        ATURAN FORMAT OUTPUT WAJIB:
+        - Tulis dalam bentuk TEKS MARKDOWN MURNI yang rapi.
+        - Gunakan **bold**, *italic*, atau *bullet points* untuk penekanan.
+        - DILARANG KERAS menggunakan struktur JSON.
+        - JANGAN PERNAH membungkus balasan dengan blok kode seperti ```markdown atau ```text. Langsung saja berikan kalimatnya dari baris pertama.";
 
         $responseText = $this->askGemini($prompt);
-        $cleanText = preg_replace('/```(?:json|text|html)?\s*(.*?)\s*```/is', '$1', $responseText);
+
+        // Pelindung (Failsafe) ganda untuk melucuti backticks markdown jika AI masih bandel
+        $cleanText = preg_replace('/^```(?:markdown|text)?\s*(.*?)\s*```$/is', '$1', trim($responseText));
 
         return trim($cleanText);
     }

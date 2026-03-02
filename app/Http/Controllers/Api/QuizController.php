@@ -79,7 +79,7 @@ class QuizController extends Controller
 
         $remedialQuestions = Question::where('unit_id', $unit_id)
             ->whereHas('wrongAnswers', function ($q) use ($user) {
-                $q->where('user_id', $user->id)->where('is_mastered', false);
+                $q->where('user_id', $user->id)->where('is_mastered', 0);
             })
             ->inRandomOrder()
             ->limit($maxQuestions)
@@ -163,7 +163,10 @@ class QuizController extends Controller
                         'user_id' => $user->id,
                         'question_id' => $question->id
                     ]);
-                    $wrongEntry->wrong_count += 1;
+                    // $wrongEntry->wrong_count += 1;
+                    $wrongEntry->wrong_count = ($wrongEntry->wrong_count ?? 0) + 1;
+                    $wrongEntry->is_mastered = 0;
+                    $wrongEntry->save();
                     $wrongEntry->is_mastered = false;
                     $wrongEntry->save();
 
@@ -216,7 +219,7 @@ class QuizController extends Controller
                     ->first();
 
                 if ($nextUnit) {
-                    UserProgress::firstOrCreate(
+                    UserProgress::updateOrCreate(
                         ['user_id' => $user->id, 'unit_id' => $nextUnit->id],
                         [
                             'is_locked' => 0,
@@ -229,17 +232,20 @@ class QuizController extends Controller
             }
             $progress->save();
 
-            $aiFeedback = null;
-            if (!empty($wrongQuestionsDetails)) {
-                $aiFeedback = $gemini->generateFeedback($wrongQuestionsDetails);
-            } else {
-                $aiFeedback = "Luar biasa! Kamu menjawab semua pertanyaan dengan sempurna. Pertahankan kerjamu!";
-            }
+            // $aiFeedback = null;
+            // if (!empty($wrongQuestionsDetails)) {
+            //     $aiFeedback = $gemini->generateFeedback($wrongQuestionsDetails);
+            // } else {
+            //     $aiFeedback = "Luar biasa! Kamu menjawab semua pertanyaan dengan sempurna. Pertahankan kerjamu!";
+            // }
+
+            $aiFeedback = $gemini->generateFeedback($wrongQuestionsDetails, $unit->topic_keyword, $score);
 
             QuizSession::create([
                 'user_id' => $user->id,
                 'unit_id' => $unit->id,
                 'score' => $score,
+                'total_questions' => $totalQuestions,
                 'correct_count' => $correctCount,
                 'ai_feedback_summary' => $aiFeedback
             ]);
@@ -262,5 +268,19 @@ class QuizController extends Controller
                 'line' => $e->getLine()
             ], 500);
         }
+    }
+
+    public function history(Request $request, $unit_id)
+    {
+        $sessions = QuizSession::where('user_id', $request->user()->id)
+            ->where('unit_id', $unit_id)
+            // Pilih kolom spesifik yang diminta FE
+            ->select('id', 'score', 'correct_count', 'total_questions', 'ai_feedback_summary', 'created_at')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json([
+            'data' => $sessions
+        ]);
     }
 }
