@@ -130,7 +130,8 @@ class WritingController extends Controller
             return response()->json(['message' => 'Gagal menganalisis gambar'], 500);
         }
 
-        $analysis = json_decode($result, true);
+        // $analysis = json_decode($result, true);
+        $analysis = is_array($result) ? $result : json_decode($result, true);
 
         return response()->json([
             'score' => $analysis['score'] ?? 0,
