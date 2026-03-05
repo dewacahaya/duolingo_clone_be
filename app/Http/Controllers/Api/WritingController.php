@@ -115,6 +115,30 @@ class WritingController extends Controller
      * "message": "Gagal menganalisis gambar. Pastikan gambar jelas."
      * }
      */
+    // public function analyze(Request $request, GeminiService $gemini)
+    // {
+    //     $request->validate([
+    //         'image' => 'required',
+    //         'character_id' => 'required|exists:characters,id'
+    //     ]);
+
+    //     $char = Character::find($request->character_id);
+
+    //     $result = $gemini->analyzeHandwriting($request->image, $char->char);
+
+    //     if (!$result) {
+    //         return response()->json(['message' => 'Gagal menganalisis gambar'], 500);
+    //     }
+
+    //     // $analysis = json_decode($result, true);
+    //     $analysis = is_array($result) ? $result : json_decode($result, true);
+
+    //     return response()->json([
+    //         'score' => $analysis['score'] ?? 0,
+    //         'feedback' => $analysis['feedback'] ?? 'Belum ada feedback!',
+    //         'target' => $char
+    //     ]);
+    // }
     public function analyze(Request $request, GeminiService $gemini)
     {
         $request->validate([
@@ -124,13 +148,25 @@ class WritingController extends Controller
 
         $char = Character::find($request->character_id);
 
-        $result = $gemini->analyzeHandwriting($request->image, $char->char);
+        // 🛡️ PENGECEKAN CERDAS:
+        $imageData = $request->image; // Asumsi awal: bentuk teks base64 dari Frontend
 
-        if (!$result) {
-            return response()->json(['message' => 'Gagal menganalisis gambar'], 500);
+        // Tapi, kalau yang dikirim adalah sebuah FILE (seperti di Postman):
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $base64 = base64_encode(file_get_contents($file->path()));
+            $mime = $file->getClientMimeType();
+            $imageData = "data:{$mime};base64,{$base64}"; // Ubah file jadi teks Base64
         }
 
-        // $analysis = json_decode($result, true);
+        // Lempar imageData yang sudah dipastikan berwujud teks ke Service
+        $result = $gemini->analyzeHandwriting($imageData, $char->char);
+
+        if (!$result) {
+            return response()->json(['message' => 'Gagal menganalisis gambar. Coba lagi.'], 500);
+        }
+
+        // Pengecekan cerdas dari solusi kita sebelumnya
         $analysis = is_array($result) ? $result : json_decode($result, true);
 
         return response()->json([
