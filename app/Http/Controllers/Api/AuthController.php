@@ -48,6 +48,7 @@ class AuthController extends Controller
                     'name' => $socialUser->getName(),
                     'password' => Hash::make(uniqid()),
                     'avatar_url' => $socialUser->getAvatar(),
+                    'provider' => 'google'
                 ]
             );
 
@@ -116,7 +117,8 @@ class AuthController extends Controller
             // 'avatar_url' => $avatarUrl,
             'energy' => 10,
             'xp_total' => 0,
-            'streak' => 0
+            'streak' => 0,
+            'provider' => 'local'
         ]);
 
         return response()->json([

@@ -108,12 +108,21 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => 'sometimes|string|max:255',
-            'avatar' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048', // Max 2MB
+            'avatar' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
+            'password' => 'sometimes|string|min:8',
         ]);
+
+        $user = $request->user();
+
+        if ($request->has('password') && $user->provider === 'google') {
+            return response()->json([
+                'message' => 'Cannot change password on Google account.'
+            ], 403);
+        }
 
         $user = $this->userService->updateProfile(
             $request->user(),
-            $request->only('name'),
+            $request->only(['name', 'password']),
             $request->file('avatar')
         );
 

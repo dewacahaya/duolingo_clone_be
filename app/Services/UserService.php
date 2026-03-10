@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
 class UserService
@@ -75,13 +76,19 @@ class UserService
             $user->name = $data['name'];
         }
 
+        if (isset($data['password'])) {
+            $user->password = Hash::make($data['password']);
+        }
+
         if ($avatarFile) {
-            if ($user->avatar_url && Storage::disk('public')->exists($user->avatar_url)) {
-                Storage::disk('public')->delete($user->avatar_url);
+            if ($user->avatar_url && !str_starts_with($user->avatar_url, 'http')) {
+                if (Storage::disk('public')->exists($user->avatar_url)) {
+                    Storage::disk('public')->delete($user->avatar_url);
+                }
             }
 
             $path = $avatarFile->store('avatars', 'public');
-            $user->avatar_url = $path; // Simpan path-nya ke DB
+            $user->avatar_url = $path;
         }
 
         $user->save();

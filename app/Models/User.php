@@ -32,6 +32,7 @@ class User extends Authenticatable
         'streak',
         'last_study_at',
         'avatar_url',
+        'provider',
     ];
 
     /**
