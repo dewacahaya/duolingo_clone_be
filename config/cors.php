@@ -19,7 +19,10 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => [
+        '*',
+        'https://meowlingo.vercel.app'
+    ],
 
     'allowed_origins_patterns' => [],
 

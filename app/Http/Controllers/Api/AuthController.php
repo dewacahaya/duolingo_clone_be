@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Validation\ValidationException;
 
@@ -58,11 +59,11 @@ class AuthController extends Controller
                 $user->save();
             }
             $token = $user->createToken('auth_token')->plainTextToken;
-            $frontendUrl = env('FRONTEND_URL', 'http://127.0.0.1:3000') . '/auth/callback?token=' . $token;
+            $frontendUrl = env('FRONTEND_URL', 'https://meowlingo.vercel.app') . '/auth/callback?token=' . $token;
             return redirect()->away($frontendUrl);
         } catch (\Exception $e) {
-            // \Log::error('Socialite Error: ' . $e->getMessage());
-            $frontendUrl = env('FRONTEND_URL', 'http://127.0.0.1:3000') . '/login?error=auth_failed';
+            Log::error('Socialite Error: ' . $e->getMessage());
+            $frontendUrl = env('FRONTEND_URL', 'https://meowlingo.vercel.app') . '/login?error=auth_failed';
             return redirect()->away($frontendUrl);
         }
     }
