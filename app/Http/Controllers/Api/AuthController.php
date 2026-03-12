@@ -103,19 +103,13 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            // 'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
         ]);
-
-        // $avatarUrl = null;
-        // if ($request->hasFile('avatar')) {
-        //     $avatarUrl = $request->file('avatar')->store('avatars', 'public');
-        // }
 
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-            // 'avatar_url' => $avatarUrl,
+            'avatar_url' => 'avatars/default_avatar.webp',
             'energy' => 10,
             'xp_total' => 0,
             'streak' => 0,
