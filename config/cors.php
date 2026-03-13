@@ -21,7 +21,8 @@ return [
 
     'allowed_origins' => [
         '*',
-        'https://meowlingo.vercel.app'
+        'https://meowlingo.vercel.app',
+        'https://extenuatory-tomika-rubbly.ngrok-free.dev'
     ],
 
     'allowed_origins_patterns' => [],
